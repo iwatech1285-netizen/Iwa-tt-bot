@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import confetti from 'canvas-confetti';
 import { IUser, IBalance, ISettings } from '../packages/shared/src/types.ts';
+import { DEFAULT_SETTINGS } from '../packages/shared/src/defaults.ts';
 import { api } from './services/apiClient.ts';
 import { getTelegramWebApp, triggerHaptic } from './services/telegramSdk.ts';
 import { sounds } from './utils/audio.ts';
@@ -31,30 +32,61 @@ export default function App() {
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
   const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
 
+  // 60 Coins Milestone Auto-Ad Opener
+  const ADSTERRA_URL = 'https://auctionr.org/4/ad02e8c2da3bad7b121661fffaa4dbdd';
+  const coinsCollectedCounterRef = useRef<number>(0);
+  const nextCoinAdMilestoneRef = useRef<number>(60);
+  const [milestoneToast, setMilestoneToast] = useState<string | null>(null);
+
+  const checkAndTriggerCoinAd = (earned: number) => {
+    if (!earned || earned <= 0) return;
+    coinsCollectedCounterRef.current += earned;
+
+    if (coinsCollectedCounterRef.current >= nextCoinAdMilestoneRef.current) {
+      nextCoinAdMilestoneRef.current += 60; // Advance to next 60-coin milestone
+      setMilestoneToast('🎉 60 Coins Collected! Opening Sponsor Offer...');
+      setTimeout(() => setMilestoneToast(null), 3500);
+
+      triggerHaptic('success');
+      sounds.playReward();
+
+      try {
+        if (window.Telegram?.WebApp?.openLink) {
+          window.Telegram.WebApp.openLink(ADSTERRA_URL);
+        } else {
+          window.open(ADSTERRA_URL, '_blank', 'noopener,noreferrer');
+        }
+      } catch (err) {
+        console.error('Failed to auto-open ad link:', err);
+      }
+    }
+  };
+
   // 1. Initial Authentication & Firestore Boot
   useEffect(() => {
     async function initApp() {
-      // Test connection to Firestore on boot as mandated by skill
-      await testConnection();
-
-      const tg = getTelegramWebApp();
-      let initDataString = '';
-      let startParam: string | undefined;
-
-      if (tg && tg.initData && tg.initData.length > 0) {
-        tg.ready();
-        tg.expand();
-        initDataString = tg.initData;
-        startParam = tg.initDataUnsafe?.start_param;
-      } else {
-        // Fallback for browser preview / development test environment
-        const queryParams = new URLSearchParams(window.location.search);
-        const ref = queryParams.get('start') || undefined;
-        initDataString = 'demo=true&user=%7B%22id%22%3A99887766%2C%22first_name%22%3A%22IWA%22%2C%22username%22%3A%22iwa_explorer%22%7D&auth_date=1770000000&hash=demo';
-        startParam = ref;
-      }
-
       try {
+        // Test connection to Firestore safely
+        await testConnection().catch((e) => console.warn('Firestore connection check notice:', e));
+
+        const tg = getTelegramWebApp();
+        let initDataString = '';
+        let startParam: string | undefined;
+
+        if (tg && tg.initData && tg.initData.length > 0) {
+          tg.ready();
+          tg.expand();
+          initDataString = tg.initData;
+          startParam = tg.initDataUnsafe?.start_param;
+        } else {
+          // Fallback for browser preview / development test environment
+          const queryParams = new URLSearchParams(window.location.search);
+          const ref = queryParams.get('start') || undefined;
+          initDataString =
+            'demo=true&user=%7B%22id%22%3A99887766%2C%22first_name%22%3A%22IWA%22%2C%22username%22%3A%22iwa_explorer%22%7D&auth_date=1770000000&hash=demo';
+          startParam = ref;
+        }
+
         const authRes = await api.authenticateTelegram(initDataString, startParam);
         setUser(authRes.user);
         setBalance(authRes.balance);
@@ -63,7 +95,30 @@ export default function App() {
         const userRes = await api.getUser();
         setSettings(userRes.settings);
       } catch (err) {
-        console.error('App init authentication error:', err);
+        console.warn('Backend connection notice (running resilient client fallback mode):', err);
+        // Resilient fallback: Prevents white screen if deployed statically on GitHub Pages
+        setUser({
+          telegramId: '99887766',
+          username: 'iwa_explorer',
+          firstName: 'IWA Explorer',
+          status: 'active',
+          createdAt: new Date().toISOString(),
+          lastActiveAt: new Date().toISOString(),
+        });
+        setBalance({
+          userId: '99887766',
+          coins: 0,
+          totalEarned: 0,
+          totalSpent: 0,
+          totalTaps: 0,
+          energy: 1000,
+          maxEnergy: 1000,
+          lastEnergyUpdateAt: Date.now(),
+          level: 1,
+          streakDays: 0,
+          updatedAt: Date.now(),
+        });
+        setSettings(DEFAULT_SETTINGS);
       } finally {
         setLoading(false);
       }
@@ -123,6 +178,9 @@ export default function App() {
           : prev
       );
 
+      // Check if 60 coins threshold collected
+      checkAndTriggerCoinAd(res.coinsEarned);
+
       // Level-up celebration
       if (res.leveledUp) {
         triggerHaptic('success');
@@ -135,10 +193,18 @@ export default function App() {
         });
       }
     } catch (err) {
-      console.error('Tap batch error:', err);
-      // Re-sync balance from server on error
-      const fresh = await api.getUser();
-      setBalance(fresh.balance);
+      console.warn('Tap batch network notice (applying client fallback):', err);
+      setBalance((prev) => {
+        if (!prev) return prev;
+        const earned = count * (prev.level || 1);
+        checkAndTriggerCoinAd(earned);
+        return {
+          ...prev,
+          coins: prev.coins + earned,
+          totalEarned: prev.totalEarned + earned,
+          totalTaps: (prev.totalTaps || 0) + count,
+        };
+      });
     }
   };
 
@@ -161,6 +227,7 @@ export default function App() {
 
   const handleRewardReceived = (amount: number, newBalance: number) => {
     setBalance((prev) => (prev ? { ...prev, coins: newBalance } : prev));
+    checkAndTriggerCoinAd(amount);
   };
 
   const todayUtc = new Date().toISOString().split('T')[0];
@@ -191,6 +258,13 @@ export default function App() {
         onOpenAdminModal={() => setIsAdminModalOpen(true)}
         onOpenProfile={() => setCurrentTab('profile')}
       />
+
+      {/* 60 Coins Auto-Ad Milestone Toast */}
+      {milestoneToast && (
+        <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 via-violet-600 to-cyan-500 text-white font-bold text-xs shadow-2xl backdrop-blur-md animate-bounce border border-amber-300/40 flex items-center gap-2 max-w-[90vw] text-center">
+          <span>{milestoneToast}</span>
+        </div>
+      )}
 
       {/* Main Viewport Screen Router */}
       <main className="flex-1 flex flex-col max-w-lg w-full mx-auto relative overflow-hidden">

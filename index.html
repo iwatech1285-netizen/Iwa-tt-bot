@@ -2,17 +2,37 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>IWA BOT - Telegram Mini App & Bot</title>
     <meta name="description" content="Production-ready Telegram Mini App and Bot featuring tap-to-earn game, daily rewards, tasks, referrals, leaderboards, points wallet, and admin dashboard." />
     <meta property="og:title" content="IWA BOT - Telegram Mini App & Bot" />
     <meta property="og:description" content="Production-ready Telegram Mini App and Bot featuring tap-to-earn game, daily rewards, tasks, referrals, leaderboards, points wallet, and admin dashboard." />
     <meta property="og:type" content="website" />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="theme-color" content="#090d16" />
+
+    <!-- Telegram WebApp SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+    <style>
+      html, body {
+        background-color: #090d16;
+        color: #f1f5f9;
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
+        width: 100%;
+        overflow-x: hidden;
+        -webkit-tap-highlight-color: transparent;
+      }
+      #root {
+        min-height: 100vh;
+        background-color: #090d16;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
-

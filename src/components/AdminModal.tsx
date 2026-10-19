@@ -23,9 +23,7 @@ interface AdminModalProps {
 type AdminTab = 'overview' | 'users' | 'tasks' | 'withdrawals' | 'settings';
 
 export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
-  const [adminSecret, setAdminSecret] = useState(
-    localStorage.getItem('iwa_admin_secret') || 'Anasiwaadmin1229'
-  );
+  const [adminSecret, setAdminSecret] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [activeTab, setActiveTab] = useState<AdminTab>('overview');
   const [loading, setLoading] = useState(false);
@@ -56,8 +54,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
   const [newTaskUrl, setNewTaskUrl] = useState('https://t.me/iwacoin_channel');
   const [newTaskType, setNewTaskType] = useState<ITask['type']>('telegram_channel');
 
+  const handleClose = () => {
+    setAdminSecret('');
+    setIsAuthenticated(false);
+    setError(null);
+    setSuccessMsg(null);
+    onClose();
+  };
+
   // Load Dashboard Data
   const loadDashboard = async () => {
+    if (!adminSecret.trim()) {
+      setError('Please enter the Admin Setup Secret');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -65,7 +75,6 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
       setStats(data.stats);
       setCurrentSettings(data.settings);
       setIsAuthenticated(true);
-      localStorage.setItem('iwa_admin_secret', adminSecret);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Admin authentication failed');
       setIsAuthenticated(false);
@@ -179,12 +188,25 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
               <p className="text-[11px] text-slate-400">Secure Firestore & Server Operations</p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/[0.05] border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white"
-          >
-            <X className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-2">
+            {isAuthenticated && (
+              <button
+                onClick={() => {
+                  setAdminSecret('');
+                  setIsAuthenticated(false);
+                }}
+                className="px-2.5 py-1 text-xs rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors cursor-pointer"
+              >
+                Lock Admin
+              </button>
+            )}
+            <button
+              onClick={handleClose}
+              className="w-8 h-8 rounded-full bg-white/[0.05] border border-slate-700 flex items-center justify-center text-slate-400 hover:text-white cursor-pointer"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Authentication Secret Gate */}
@@ -193,19 +215,20 @@ export const AdminModal: React.FC<AdminModalProps> = ({ isOpen, onClose }) => {
             <Shield className="w-12 h-12 text-violet-400 mx-auto mb-3" />
             <h3 className="text-lg font-bold">Admin Authorization Required</h3>
             <p className="text-xs text-slate-400 mt-1 mb-4">
-              Enter the server `ADMIN_SETUP_SECRET` or login as authorized superadmin.
+              Enter the admin secret password to unlock administrative controls.
             </p>
             <input
               type="password"
-              placeholder="Admin Setup Secret"
+              placeholder="Enter Admin Password"
               value={adminSecret}
               onChange={(e) => setAdminSecret(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl bg-slate-900 border border-slate-700 text-sm mb-3 text-center focus:border-violet-500 outline-none"
+              autoComplete="new-password"
+              className="w-full px-3 py-2.5 rounded-xl bg-slate-900 border border-slate-700 text-sm mb-3 text-center focus:border-violet-500 outline-none text-white placeholder-slate-500"
             />
             <button
               onClick={loadDashboard}
               disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-sm transition-colors"
+              className="w-full py-2.5 rounded-xl bg-violet-600 hover:bg-violet-500 font-semibold text-sm transition-colors cursor-pointer"
             >
               {loading ? 'Authenticating...' : 'Unlock Admin Portal'}
             </button>

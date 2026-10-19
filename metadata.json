@@ -1,0 +1,6 @@
+{
+  "name": "IWA BOT - Telegram Mini App & Bot",
+  "description": "Production-ready Telegram Mini App and Bot featuring tap-to-earn game, daily rewards, tasks, referrals, leaderboards, points wallet, and admin dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

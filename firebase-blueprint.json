@@ -1,0 +1,221 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "Registered Telegram user entity",
+      "type": "object",
+      "properties": {
+        "telegramId": { "type": "string", "description": "Telegram user ID string" },
+        "username": { "type": "string", "description": "Telegram handle if available" },
+        "firstName": { "type": "string", "description": "User first name" },
+        "lastName": { "type": "string", "description": "User last name" },
+        "languageCode": { "type": "string", "description": "User language code" },
+        "referrerId": { "type": "string", "description": "Telegram ID of the referrer if any" },
+        "status": { "type": "string", "enum": ["active", "suspended"] },
+        "createdAt": { "type": "string", "description": "ISO timestamp of creation" },
+        "lastActiveAt": { "type": "string", "description": "ISO timestamp of last activity" }
+      },
+      "required": ["telegramId", "firstName", "status", "createdAt"]
+    },
+    "Balance": {
+      "title": "Balance",
+      "description": "User balance, energy, and level progression state",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "Telegram ID of the user" },
+        "coins": { "type": "number", "description": "Confirmed IWA Coin balance" },
+        "totalEarned": { "type": "number", "description": "Lifetime earned IWA coins" },
+        "totalSpent": { "type": "number", "description": "Total coins spent or withdrawn" },
+        "totalTaps": { "type": "number", "description": "Total taps recorded" },
+        "energy": { "type": "number", "description": "Current energy points" },
+        "maxEnergy": { "type": "number", "description": "Maximum energy capacity" },
+        "lastEnergyUpdateAt": { "type": "number", "description": "Server timestamp of last energy calculation" },
+        "level": { "type": "number", "description": "Current user level" },
+        "streakDays": { "type": "number", "description": "Consecutive daily claim streak" },
+        "lastDailyClaimDate": { "type": "string", "description": "Date string of last claimed day" },
+        "updatedAt": { "type": "number", "description": "Timestamp of last balance update" }
+      },
+      "required": ["userId", "coins", "totalEarned", "energy", "maxEnergy", "level", "streakDays"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Immutable balance modification record",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "type": { "type": "string", "enum": ["tap", "daily_reward", "referral_reward", "task_reward", "level_bonus", "admin_adjustment", "withdrawal_reservation", "withdrawal_refund"] },
+        "amount": { "type": "number" },
+        "status": { "type": "string", "enum": ["completed", "pending", "refunded"] },
+        "description": { "type": "string" },
+        "idempotencyKey": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "type", "amount", "status", "createdAt"]
+    },
+    "Referral": {
+      "title": "Referral",
+      "description": "Referral pairing record",
+      "type": "object",
+      "properties": {
+        "referrerId": { "type": "string" },
+        "refereeId": { "type": "string" },
+        "rewardPaid": { "type": "boolean" },
+        "referrerCoins": { "type": "number" },
+        "refereeCoins": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["referrerId", "refereeId", "rewardPaid", "createdAt"]
+    },
+    "Task": {
+      "title": "Task",
+      "description": "Earning task entity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "rewardAmount": { "type": "number" },
+        "type": { "type": "string", "enum": ["daily_checkin", "telegram_channel", "telegram_group", "website", "social", "custom"] },
+        "actionUrl": { "type": "string" },
+        "targetChatId": { "type": "string" },
+        "active": { "type": "boolean" },
+        "maxClaims": { "type": "number" },
+        "claimedCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["id", "title", "rewardAmount", "type", "active"]
+    },
+    "TaskCompletion": {
+      "title": "TaskCompletion",
+      "description": "User task completion receipt",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "taskId": { "type": "string" },
+        "rewardAmount": { "type": "number" },
+        "verifiedAt": { "type": "string" }
+      },
+      "required": ["userId", "taskId", "rewardAmount", "verifiedAt"]
+    },
+    "DailyReward": {
+      "title": "DailyReward",
+      "description": "Daily claim calendar record",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "dayNumber": { "type": "number" },
+        "rewardAmount": { "type": "number" },
+        "claimedDateUTC": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["userId", "dayNumber", "rewardAmount", "claimedDateUTC", "createdAt"]
+    },
+    "Withdrawal": {
+      "title": "Withdrawal",
+      "description": "Points withdrawal request",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "pointsAmount": { "type": "number" },
+        "method": { "type": "string" },
+        "destinationAddress": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "approved", "rejected", "completed"] },
+        "adminNotes": { "type": "string" },
+        "processedBy": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "userId", "pointsAmount", "method", "destinationAddress", "status", "createdAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized administrator record",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "type": "string", "enum": ["superadmin", "admin", "moderator"] },
+        "isActive": { "type": "boolean" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["email", "role", "isActive"]
+    },
+    "Setting": {
+      "title": "Setting",
+      "description": "Application configuration settings",
+      "type": "object",
+      "properties": {
+        "maxEnergy": { "type": "number" },
+        "baseTapReward": { "type": "number" },
+        "energyRegenRatePerSec": { "type": "number" },
+        "maintenanceMode": { "type": "boolean" },
+        "supportUsername": { "type": "string" },
+        "botUsername": { "type": "string" }
+      },
+      "required": ["maxEnergy", "baseTapReward", "energyRegenRatePerSec"]
+    },
+    "AuditLog": {
+      "title": "AuditLog",
+      "description": "Tamper-evident administrative action log",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "adminEmail": { "type": "string" },
+        "action": { "type": "string" },
+        "targetUserId": { "type": "string" },
+        "previousValue": { "type": "string" },
+        "newValue": { "type": "string" },
+        "reason": { "type": "string" },
+        "timestamp": { "type": "string" }
+      },
+      "required": ["id", "adminEmail", "action", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "Registered Telegram user records"
+    },
+    "/balances/{userId}": {
+      "schema": "Balance",
+      "description": "Server-authoritative game state and energy"
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Immutable balance audit ledger"
+    },
+    "/referrals/{referralId}": {
+      "schema": "Referral",
+      "description": "User referral tracking"
+    },
+    "/tasks/{taskId}": {
+      "schema": "Task",
+      "description": "Configurable earning tasks"
+    },
+    "/task_completions/{completionId}": {
+      "schema": "TaskCompletion",
+      "description": "Recorded task completions"
+    },
+    "/daily_rewards/{claimId}": {
+      "schema": "DailyReward",
+      "description": "Daily claim streak records"
+    },
+    "/withdrawals/{withdrawalId}": {
+      "schema": "Withdrawal",
+      "description": "User points withdrawal requests"
+    },
+    "/admin_users/{adminId}": {
+      "schema": "AdminUser",
+      "description": "Role-based administrator privileges"
+    },
+    "/settings/{settingId}": {
+      "schema": "Setting",
+      "description": "Global application configuration"
+    },
+    "/audit_logs/{logId}": {
+      "schema": "AuditLog",
+      "description": "Administrative actions audit trail"
+    }
+  }
+}

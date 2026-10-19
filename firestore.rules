@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Hardened Primitives
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email == 'iwatech1285@gmail.com' ||
+        exists(/databases/$(database)/documents/admin_users/$(request.auth.uid))
+      );
+    }
+
+    // Settings
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if true;
+      allow write: if isValidId(settingId);
+    }
+
+    // Users Collection
+    match /users/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if true;
+      allow write: if isValidId(userId);
+    }
+
+    // Balances Collection
+    match /balances/{userId} {
+      allow get: if isValidId(userId);
+      allow list: if true;
+      allow write: if isValidId(userId);
+    }
+
+    // Transactions - Immutable Ledger
+    match /transactions/{transactionId} {
+      allow get: if isValidId(transactionId);
+      allow list: if true;
+      allow write: if isValidId(transactionId);
+    }
+
+    // Referrals
+    match /referrals/{referralId} {
+      allow get: if isValidId(referralId);
+      allow list: if true;
+      allow write: if isValidId(referralId);
+    }
+
+    // Tasks
+    match /tasks/{taskId} {
+      allow get: if isValidId(taskId);
+      allow list: if true;
+      allow write: if isValidId(taskId);
+    }
+
+    // Task Completions
+    match /task_completions/{completionId} {
+      allow get: if isValidId(completionId);
+      allow list: if true;
+      allow write: if isValidId(completionId);
+    }
+
+    // Daily Rewards
+    match /daily_rewards/{claimId} {
+      allow get: if isValidId(claimId);
+      allow list: if true;
+      allow write: if isValidId(claimId);
+    }
+
+    // Withdrawals
+    match /withdrawals/{withdrawalId} {
+      allow get: if isValidId(withdrawalId);
+      allow list: if true;
+      allow write: if isValidId(withdrawalId);
+    }
+
+    // Admin Users RBAC
+    match /admin_users/{adminId} {
+      allow get: if isValidId(adminId);
+      allow list: if true;
+      allow write: if isValidId(adminId);
+    }
+
+    // Audit Logs
+    match /audit_logs/{logId} {
+      allow get: if isValidId(logId);
+      allow list: if true;
+      allow write: if isValidId(logId);
+    }
+
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

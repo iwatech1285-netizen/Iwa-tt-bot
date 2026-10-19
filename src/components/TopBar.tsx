@@ -65,13 +65,19 @@ export const TopBar: React.FC<TopBarProps> = ({
 
         {/* Center / Right controls */}
         <div className="flex items-center gap-2">
+          {/* Coin Counter Pill */}
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs tabular-nums shadow-[0_0_10px_rgba(245,158,11,0.15)]">
+            <span>🪙</span>
+            <span>{Number(balance?.coins ?? 0).toLocaleString()}</span>
+          </div>
+
           {/* Level Progress Trigger */}
           <button
             onClick={() => {
               triggerHaptic('light');
               onOpenLevelModal();
             }}
-            className="px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-cyan-500/20 text-[11px] font-medium text-cyan-300 hover:bg-cyan-500/10 transition-colors flex items-center gap-1 min-h-[38px]"
+            className="px-2.5 py-1.5 rounded-lg bg-white/[0.04] border border-cyan-500/20 text-[11px] font-medium text-cyan-300 hover:bg-cyan-500/10 transition-colors flex items-center gap-1 min-h-[38px] cursor-pointer"
           >
             <span>Level {level}</span>
           </button>

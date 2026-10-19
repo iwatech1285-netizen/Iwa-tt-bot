@@ -93,6 +93,9 @@ export const CoinTapButton: React.FC<CoinTapButtonProps> = ({
     setIsPressing(false);
   };
 
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgError, setImgError] = useState(false);
+
   return (
     <div className="relative flex items-center justify-center my-auto py-4 select-none touch-none">
       {/* Outer ambient glow circles */}
@@ -114,11 +117,34 @@ export const CoinTapButton: React.FC<CoinTapButtonProps> = ({
 
         {/* Coin Image Container */}
         <div className="w-full h-full rounded-full overflow-hidden bg-[#0d1322] border-4 border-slate-900 shadow-2xl relative">
+          {/* Always-visible High-Fidelity 3D Cyber Coin Vector Fallback */}
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-amber-600 via-yellow-500 to-amber-700 p-2 select-none pointer-events-none">
+            <div className="w-full h-full rounded-full border-4 border-amber-300/80 bg-gradient-to-tr from-amber-800 via-amber-500 to-yellow-400 shadow-[inset_0_0_20px_rgba(0,0,0,0.5)] flex flex-col items-center justify-center relative overflow-hidden">
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_30%,_rgba(255,255,255,0.4),_transparent_70%)]" />
+              <div className="w-44 h-44 rounded-full border-2 border-amber-200/50 border-dashed flex items-center justify-center relative">
+                <div className="text-center z-10">
+                  <div className="text-4xl sm:text-5xl font-black tracking-widest text-white drop-shadow-[0_4px_12px_rgba(0,0,0,0.7)]">
+                    IWA
+                  </div>
+                  <div className="text-[10px] sm:text-xs font-extrabold tracking-widest text-amber-200 uppercase mt-0.5 drop-shadow">
+                    ★ TOKEN ★
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* High-Res Asset Image (Overlays smoothly when loaded) */}
           <img
             src={ASSETS.coin}
             alt="IWA Coin"
+            loading="eager"
             referrerPolicy="no-referrer"
-            className="w-full h-full object-cover pointer-events-none drop-shadow-2xl"
+            onLoad={() => setImgLoaded(true)}
+            onError={() => setImgError(true)}
+            className={`absolute inset-0 w-full h-full object-cover pointer-events-none drop-shadow-2xl transition-opacity duration-300 ${
+              imgLoaded && !imgError ? 'opacity-100' : 'opacity-0'
+            }`}
           />
           {/* Subtle glossy sheen */}
           <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-cyan-400/10 to-white/10 pointer-events-none" />

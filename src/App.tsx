@@ -19,12 +19,46 @@ import { LevelModal } from './components/LevelModal.tsx';
 import { AdminModal } from './components/AdminModal.tsx';
 import { SponsorModal } from './components/SponsorModal.tsx';
 
+const getInitialUser = (): IUser => {
+  try {
+    const cached = localStorage.getItem('iwa_user_cache');
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  return {
+    telegramId: '99887766',
+    username: 'iwa_explorer',
+    firstName: 'IWA Explorer',
+    status: 'active',
+    createdAt: new Date().toISOString(),
+    lastActiveAt: new Date().toISOString(),
+  };
+};
+
+const getInitialBalance = (): IBalance => {
+  try {
+    const cached = localStorage.getItem('iwa_balance_cache');
+    if (cached) return JSON.parse(cached);
+  } catch {}
+  return {
+    userId: '99887766',
+    coins: 0,
+    totalEarned: 0,
+    totalSpent: 0,
+    totalTaps: 0,
+    energy: 1000,
+    maxEnergy: 1000,
+    lastEnergyUpdateAt: Date.now(),
+    level: 1,
+    streakDays: 0,
+    updatedAt: Date.now(),
+  };
+};
+
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
-  const [user, setUser] = useState<IUser | null>(null);
-  const [balance, setBalance] = useState<IBalance | null>(null);
-  const [settings, setSettings] = useState<ISettings | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<IUser>(getInitialUser);
+  const [balance, setBalance] = useState<IBalance>(getInitialBalance);
+  const [settings, setSettings] = useState<ISettings>(DEFAULT_SETTINGS);
 
   // Modals
   const [isDailyModalOpen, setIsDailyModalOpen] = useState(false);
@@ -62,12 +96,25 @@ export default function App() {
     }
   };
 
+  // Sync user and balance to localStorage for permanent display
+  useEffect(() => {
+    try {
+      localStorage.setItem('iwa_balance_cache', JSON.stringify(balance));
+    } catch {}
+  }, [balance]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('iwa_user_cache', JSON.stringify(user));
+    } catch {}
+  }, [user]);
+
   // 1. Initial Authentication & Firestore Boot
   useEffect(() => {
     async function initApp() {
       try {
-        // Test connection to Firestore safely
-        await testConnection().catch((e) => console.warn('Firestore connection check notice:', e));
+        // Run Firestore connection test in background non-blocking
+        testConnection().catch((e) => console.warn('Firestore notice:', e));
 
         const tg = getTelegramWebApp();
         let initDataString = '';
@@ -119,8 +166,6 @@ export default function App() {
           updatedAt: Date.now(),
         });
         setSettings(DEFAULT_SETTINGS);
-      } finally {
-        setLoading(false);
       }
     }
 
@@ -232,21 +277,6 @@ export default function App() {
 
   const todayUtc = new Date().toISOString().split('T')[0];
   const hasUnclaimedDaily = balance?.lastDailyClaimDate !== todayUtc;
-
-  if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-[#090d16] text-white">
-        <div className="flex flex-col items-center gap-3">
-          <div className="relative w-16 h-16 rounded-2xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center">
-            <span className="animate-spin w-8 h-8 border-2 border-cyan-400 border-t-transparent rounded-full" />
-          </div>
-          <span className="text-sm font-semibold tracking-wide text-slate-300">
-            Initializing IWA BOT...
-          </span>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#090d16] text-slate-100 flex flex-col font-sans antialiased overflow-x-hidden">

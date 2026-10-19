@@ -101,7 +101,8 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({
           IWA Coin Balance
         </div>
         <div className="text-4xl sm:text-5xl font-black tracking-tight text-white mt-1 drop-shadow-[0_0_20px_rgba(6,182,212,0.35)] tabular-nums flex items-center justify-center gap-2">
-          <span>{coins.toLocaleString()}</span>
+          <span className="text-3xl sm:text-4xl select-none">🪙</span>
+          <span>{Number(coins ?? 0).toLocaleString()}</span>
         </div>
         <div className="text-xs text-slate-400 mt-1 flex items-center justify-center gap-2">
           <span>Multiplier: <span className="text-cyan-400 font-semibold">x{config.tapMultiplier}</span></span>

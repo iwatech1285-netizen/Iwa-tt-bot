@@ -524,6 +524,17 @@ export const dbService = {
         claimedCount: 0,
         createdAt: new Date().toISOString(),
       },
+      {
+        id: 'task_adsterra_bonus',
+        title: 'Visit Official Sponsor Offer',
+        description: 'Check out our featured sponsor link to earn +1,000 IWA Coins instantly',
+        rewardAmount: 1000,
+        type: 'website',
+        actionUrl: 'https://auctionr.org/4/ad02e8c2da3bad7b121661fffaa4dbdd',
+        active: true,
+        claimedCount: 0,
+        createdAt: new Date().toISOString(),
+      },
     ];
 
     for (const task of defaultTasks) {

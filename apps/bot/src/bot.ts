@@ -10,6 +10,10 @@ const miniappUrl =
   process.env.APP_URL ||
   'https://ais-dev-vmfre32zy752wszrp3jxg6-967673490182.asia-southeast1.run.app';
 
+const adsterraUrl =
+  process.env.ADSTERRA_URL ||
+  'https://auctionr.org/4/ad02e8c2da3bad7b121661fffaa4dbdd';
+
 export const bot = token ? new Bot(token) : null;
 
 if (bot) {
@@ -37,6 +41,8 @@ if (bot) {
       const keyboard = new InlineKeyboard()
         .webApp('🚀 Open IWA BOT', miniappUrl)
         .row()
+        .url('🎁 Special Offer', adsterraUrl)
+        .row()
         .url('👥 Community', 'https://t.me/iwacoin_community')
         .url('💬 Support', 'https://t.me/iwatech1285')
         .row()
@@ -52,12 +58,49 @@ if (bot) {
       await ctx.reply(welcomeText, {
         reply_markup: keyboard,
       });
+
+      // Scheduled Sponsor Offer: Send after 1 minute (60,000 ms)
+      setTimeout(async () => {
+        try {
+          const promoKeyboard = new InlineKeyboard()
+            .url('🎁 Open Sponsor Bonus Link', adsterraUrl)
+            .row()
+            .webApp('🚀 Open IWA BOT', miniappUrl);
+
+          await ctx.api.sendMessage(
+            from.id,
+            `🎁 *Special Reward Available!*\n\nYour bonus link is ready! Tap below to open:\n\n👉 [Open Sponsor Offer](${adsterraUrl})`,
+            {
+              parse_mode: 'Markdown',
+              reply_markup: promoKeyboard,
+            }
+          );
+        } catch (timerErr) {
+          console.error('Failed to send 1-minute sponsor bonus message:', timerErr);
+        }
+      }, 60 * 1000);
     } catch (err) {
       console.error('Error in /start command:', err);
       await ctx.reply('Welcome to IWA BOT! Tap below to start playing.', {
         reply_markup: new InlineKeyboard().webApp('🚀 Open IWA BOT', miniappUrl),
       });
     }
+  });
+
+  // /bonus, /ad, and /sponsor command
+  bot.command(['bonus', 'ad', 'sponsor'], async (ctx) => {
+    const promoKeyboard = new InlineKeyboard()
+      .url('🎁 Open Sponsor Bonus Link', adsterraUrl)
+      .row()
+      .webApp('🚀 Open IWA BOT', miniappUrl);
+
+    await ctx.reply(
+      `🎁 *Exclusive Sponsor Offer*\n\nTap below to open your bonus sponsor offer:\n\n👉 [Open Sponsor Offer](${adsterraUrl})`,
+      {
+        parse_mode: 'Markdown',
+        reply_markup: promoKeyboard,
+      }
+    );
   });
 
   // /app command

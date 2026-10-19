@@ -16,6 +16,7 @@ import { ProfileScreen } from './screens/ProfileScreen.tsx';
 import { DailyRewardsModal } from './components/DailyRewardsModal.tsx';
 import { LevelModal } from './components/LevelModal.tsx';
 import { AdminModal } from './components/AdminModal.tsx';
+import { SponsorModal } from './components/SponsorModal.tsx';
 
 export default function App() {
   const [currentTab, setCurrentTab] = useState<NavTab>('home');
@@ -28,6 +29,7 @@ export default function App() {
   const [isDailyModalOpen, setIsDailyModalOpen] = useState(false);
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
   const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+  const [isSponsorModalOpen, setIsSponsorModalOpen] = useState(false);
 
   // 1. Initial Authentication & Firestore Boot
   useEffect(() => {
@@ -87,6 +89,15 @@ export default function App() {
 
     return () => clearInterval(timer);
   }, [settings]);
+
+  // 1-Minute Sponsor Offer Trigger
+  useEffect(() => {
+    const sponsorTimer = setTimeout(() => {
+      setIsSponsorModalOpen(true);
+    }, 60 * 1000); // 1 minute (60 seconds)
+
+    return () => clearTimeout(sponsorTimer);
+  }, []);
 
   // 3. Batched Tap Execution Handler
   const handleTapBatch = async (count: number) => {
@@ -244,6 +255,14 @@ export default function App() {
       <AdminModal
         isOpen={isAdminModalOpen}
         onClose={() => setIsAdminModalOpen(false)}
+      />
+
+      <SponsorModal
+        isOpen={isSponsorModalOpen}
+        onClose={() => setIsSponsorModalOpen(false)}
+        onClaimReward={(bonus) => {
+          setBalance((prev) => (prev ? { ...prev, coins: prev.coins + bonus } : prev));
+        }}
       />
     </div>
   );
